@@ -5,7 +5,7 @@ import urlparse
 import xbmcgui
 import xbmcplugin
 import xbmcaddon
-from lib.bandcamp_api import bandcamp
+from resources.lib.bandcamp_api import bandcamp
 
 
 def build_url(query):
