@@ -1,5 +1,5 @@
 # plugin.audio.kxmxpxtx.bandcamp
-Bandcamp on Kodi Media Player. Currently possible to get featured tracks from discovery and browse own collection.
+Bandcamp (https://bandcamp.com) on Kodi Media Player. Currently possible to get featured tracks from discovery and browse own collection.
 
 uses https://github.com/Virusmater/bandcamp_api as python bandcamp wrapper
 
