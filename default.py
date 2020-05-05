@@ -6,6 +6,7 @@ import xbmcgui
 import xbmcplugin
 import xbmcaddon
 from resources.lib.bandcamp_api import bandcamp
+from resources.lib.bandcamp_api.bandcamp import Band
 
 
 def build_url(query):
@@ -130,7 +131,7 @@ def main():
         build_band_list(bandcamp.get_collection(bandcamp.get_fan_id()))
     elif mode[0] == 'list_albums':
         bands = bandcamp.get_collection(bandcamp.get_fan_id())
-        band = bandcamp.Band(band_id=args.get('band_id', None)[0])
+        band = Band(band_id=args.get('band_id', None)[0])
         build_album_list(bands[band])
     elif mode[0] == 'list_songs':
         album_id = args.get('album_id', None)[0]
