@@ -138,14 +138,3 @@ class Bandcamp:
             parser.feed(content)
             self.data_blob = parser.data_blob
         return self.data_blob
-
-
-# bandcamp = Bandcamp("kxmxpxtx")
-# # print(str(bandcamp.get_genres()))
-# # print(str(bandcamp.get_subgenres()))
-# print(str(bandcamp.get_fan_id()))
-# # print(str(bandcamp.get_album("988187399")))
-# disc = bandcamp.discover()
-#
-# alb = bandcamp.get_album("988187399")
-# print(str(bandcamp.get_collection(bandcamp.get_fan_id())))
