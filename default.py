@@ -128,9 +128,7 @@ def play_song(url):
 
 
 def main():
-    xbmc.log(str(sys.argv[2][1:]), xbmc.LOGERROR)
-    to_parse = sys.argv[2][1:].encode('utf-8')
-    args = parse_qs(to_parse)
+    args = parse_qs(sys.argv[2][1:])
     mode = args.get('mode', None)
     if mode is None:
         build_main_menu()
