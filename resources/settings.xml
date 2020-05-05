@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <category label="128">
+        <setting label="20142" type="text" id="username" default=""/>
+    </category>
+</settings>
