@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.audio.kxmxpxtx.bandcamp" name="Bandcamp" version="0.0.1" provider-name="kxmxpxtx">
     <requires>
-        <import addon="script.module.requests" version="2.9.1"/>
+         <import addon="script.module.requests" version="2.9.1"/>
         <import addon="script.module.future"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="default.py">
@@ -12,5 +12,10 @@
         <license>MIT</license>
         <description lang="en">Browse discovery and your collection</description>
         <platform>all</platform>
+            <assets>
+                <icon>icon.png</icon>
+                <screenshot>screenshot/collection.png</screenshot>
+                <screenshot>screenshot/discover.png</screenshot>
+            </assets>
     </extension>
 </addon>

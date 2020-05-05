@@ -75,7 +75,7 @@ class Bandcamp:
         url = "https://bandcamp.com/api/discover/3/get_web?g={genre}&t={sub_genre}&s={slice}&p={page}&f=all" \
             .format(genre=genre, sub_genre=sub_genre, slice=slice, page=page)
         request = requests.get(url)
-        items = json.loads(request.content.decode('utf-8'))['items']
+        items = json.loads(request.text)['items']
         discover_list = {}
         for item in items:
             track = Track(item['featured_track']['title'], item['featured_track']['file']['mp3-128'],
@@ -115,7 +115,7 @@ class Bandcamp:
         url = "https://bandcamp.com/EmbeddedPlayer/album={album_id}".format(album_id=album_id)
         request = requests.get(url)
         parser = _PlayerDataParser()
-        content = request.content.decode('utf-8')
+        content = request.text
         parser.feed(content)
         player_data = parser.player_data
         track_list = []
