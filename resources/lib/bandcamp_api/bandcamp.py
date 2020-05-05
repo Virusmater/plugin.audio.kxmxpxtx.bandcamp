@@ -10,7 +10,7 @@ import time
 
 class Band:
     def __init__(self, band_id, band_name=""):
-        self.band_name = band_name.encode('utf-8')
+        self.band_name = band_name
         self.band_id = str(band_id)
 
     def __eq__(self, other):
@@ -25,7 +25,7 @@ class Band:
 
 class Album:
     def __init__(self, album_id, album_name, art_id):
-        self.album_name = album_name.encode('utf-8')
+        self.album_name = album_name
         self.art_id = art_id
         self.album_id = album_id
 
@@ -35,7 +35,7 @@ class Album:
 
 class Track:
     def __init__(self, track_name, file, duration, number=0):
-        self.track_name = track_name.encode('utf-8')
+        self.track_name = track_name
         self.file = file
         self.duration = duration
         self.number = number

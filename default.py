@@ -94,7 +94,7 @@ def build_subgenre_list(genre):
 def build_song_list(album, tracks):
     song_list = []
     for track in tracks:
-        title = "{number}. {track}".format(number=track.number, track=track.track_name)
+        title = u"{number}. {track}".format(number=track.number, track=track.track_name)
         li = xbmcgui.ListItem(label=title)
         li.setInfo('music', {'duration': int(track.duration), 'tracknumber': track.number})
         li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
@@ -110,7 +110,7 @@ def build_featured_list(bands):
     for band in bands:
         for album in bands[band]:
             for track in bands[band][album]:
-                title = "{band} - {track}".format(band=band.band_name, track=track.track_name)
+                title = u"{band} - {track}".format(band=band.band_name, track=track.track_name)
                 li = xbmcgui.ListItem(label=title)
                 li.setInfo('music', {'duration': int(track.duration)})
                 li.setArt({'thumb': album.get_art_img(), 'fanart':album.get_art_img()})
