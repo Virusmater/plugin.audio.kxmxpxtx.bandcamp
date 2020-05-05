@@ -6,8 +6,11 @@ uses https://github.com/Virusmater/bandcamp_api as python bandcamp wrapper
 Support bands you like!
 # screenshots
 collection
+
 ![image](https://raw.githubusercontent.com/Virusmater/plugin.audio.kxmxpxtx.bandcamp/master/screenshot/collection.png)
+
 discover
+
 ![image](https://raw.githubusercontent.com/Virusmater/plugin.audio.kxmxpxtx.bandcamp/master/screenshot/discover.png)
 # installation
 download zip and add it to Kodi
