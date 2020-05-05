@@ -1,17 +1,26 @@
 # https://docs.python.org/2.7/
 import sys
 import urllib
-import urlparse
+from future.standard_library import install_aliases
+install_aliases()
+from future.utils import (PY3)
+if PY3:
+    from urllib.parse import parse_qs
+else:
+    from urlparse import parse_qs
+
+from urllib.parse import urlencode
 import xbmcgui
 import xbmcplugin
 import xbmcaddon
+import xbmc
 from resources.lib.bandcamp_api import bandcamp
 from resources.lib.bandcamp_api.bandcamp import Band
 
 
 def build_url(query):
     base_url = sys.argv[0]
-    return base_url + '?' + urllib.urlencode(query)
+    return base_url + '?' + urlencode(query)
 
 def build_main_menu():
     is_folder = True
@@ -48,7 +57,7 @@ def build_album_list(albums):
     for album in albums:
         li = xbmcgui.ListItem(label=album.album_name)
         url = build_url({'mode': 'list_songs', 'album_id': album.album_id})
-        li.setArt({'thumb': album.get_art_img()})
+        li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
         albums_list.append((url, li, True))
     xbmcplugin.addDirectoryItems(addon_handle, albums_list, len(albums_list))
     xbmcplugin.endOfDirectory(addon_handle)
@@ -88,7 +97,7 @@ def build_song_list(album, tracks):
         title = "{number}. {track}".format(number=track.number, track=track.track_name)
         li = xbmcgui.ListItem(label=title, thumbnailImage=album.get_art_img())
         li.setInfo('music', {'duration': int(track.duration), 'tracknumber': track.number})
-        li.setProperty('fanart_image', album.get_art_img())
+        li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
         li.setProperty('IsPlayable', 'true')
         url = build_url({'mode': 'stream', 'url': track.file, 'title': title})
         song_list.append((url, li, False))
@@ -102,9 +111,9 @@ def build_featured_list(bands):
         for album in bands[band]:
             for track in bands[band][album]:
                 title = "{band} - {track}".format(band=band.band_name, track=track.track_name)
-                li = xbmcgui.ListItem(label=title, thumbnailImage=album.get_art_img())
+                li = xbmcgui.ListItem(label=title)
                 li.setInfo('music', {'duration': int(track.duration)})
-                li.setProperty('fanart_image', album.get_art_img())
+                li.setArt({'thumb': album.get_art_img(), 'fanart':album.get_art_img()})
                 li.setProperty('IsPlayable', 'true')
                 url = build_url({'mode': 'stream', 'url': track.file, 'title': title})
                 song_list.append((url, li, False))
@@ -119,7 +128,9 @@ def play_song(url):
 
 
 def main():
-    args = urlparse.parse_qs(sys.argv[2][1:])
+    xbmc.log(str(sys.argv[2][1:]), xbmc.LOGERROR)
+    to_parse = sys.argv[2][1:].encode('utf-8')
+    args = parse_qs(to_parse)
     mode = args.get('mode', None)
     if mode is None:
         build_main_menu()
