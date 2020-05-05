@@ -95,7 +95,7 @@ def build_song_list(album, tracks):
     song_list = []
     for track in tracks:
         title = "{number}. {track}".format(number=track.number, track=track.track_name)
-        li = xbmcgui.ListItem(label=title, thumbnailImage=album.get_art_img())
+        li = xbmcgui.ListItem(label=title)
         li.setInfo('music', {'duration': int(track.duration), 'tracknumber': track.number})
         li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
         li.setProperty('IsPlayable', 'true')
