@@ -19,7 +19,6 @@ download zip and add it to Kodi
 * add caches for genre/sub-genre, collection and fan_id
 * add search
 * add possibility to listen to all bands and albumst in the collection
-* check python 3 compatibility (ping me if it works with Kodi 19)
 * configure cover arts quality
 * add setting for best/new/recommended discovery
 * add setting for discovery playlist size
