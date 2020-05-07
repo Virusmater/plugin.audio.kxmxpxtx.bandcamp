@@ -56,7 +56,7 @@ def build_album_list(albums):
     albums_list = []
     for album in albums:
         li = xbmcgui.ListItem(label=album.album_name)
-        url = build_url({'mode': 'list_songs', 'album_id': album.album_id})
+        url = build_url({'mode': 'list_songs', 'album_id': album.album_id, 'item_type': album.item_type})
         li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
         albums_list.append((url, li, True))
     xbmcplugin.addDirectoryItems(addon_handle, albums_list, len(albums_list))
@@ -144,7 +144,8 @@ def main():
         build_album_list(bands[band])
     elif mode[0] == 'list_songs':
         album_id = args.get('album_id', None)[0]
-        build_song_list(*bandcamp.get_album(album_id))
+        item_type = args.get('item_type', None)[0]
+        build_song_list(*bandcamp.get_album(album_id=album_id, item_type=item_type))
     elif mode[0] == 'list_subgenre':
         genre = args.get('category', None)[0]
         build_subgenre_list(genre)
@@ -158,7 +159,7 @@ def main():
 
 if __name__ == '__main__':
     my_addon = xbmcaddon.Addon()
-    username = my_addon.getSetting('username')  # returns the string 'true' or 'false'
+    username = my_addon.getSetting('username')
     bandcamp = bandcamp.Bandcamp(username)
     addon_handle = int(sys.argv[1])
     main()
