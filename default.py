@@ -125,6 +125,13 @@ def create_track_item(band, album, track):
     li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
     li.setProperty('IsPlayable', 'true')
     url = build_url({'mode': 'stream', 'url': track.file, 'title': title})
+
+    album_url = build_url({'mode': 'list_songs', 'album_id': album.album_id, 'item_type': 'album'})
+    cmd = 'Container.Update({album_url})'.format(url_a=album_url)
+    commands = []
+    commands.append(('Go to album', cmd))
+    li.addContextMenuItems(commands)
+
     return url, li
 
 def play_song(url):
