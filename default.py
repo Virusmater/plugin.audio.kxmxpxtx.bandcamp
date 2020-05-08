@@ -127,7 +127,7 @@ def create_track_item(band, album, track):
     url = build_url({'mode': 'stream', 'url': track.file, 'title': title})
 
     album_url = build_url({'mode': 'list_songs', 'album_id': album.album_id, 'item_type': 'album'})
-    cmd = 'Container.Update({album_url})'.format(url_a=album_url)
+    cmd = 'Container.Update({album_url})'.format(album_url=album_url)
     commands = []
     commands.append(('Go to album', cmd))
     li.addContextMenuItems(commands)
