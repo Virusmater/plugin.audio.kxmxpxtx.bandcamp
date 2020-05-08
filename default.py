@@ -18,6 +18,12 @@ import xbmc
 from resources.lib.bandcamp_api import bandcamp
 from resources.lib.bandcamp_api.bandcamp import Band
 
+try:
+    import StorageServer
+except:
+    from resources.lib.cache import storageserverdummy as StorageServer
+cache = StorageServer.StorageServer("plugin.audio.kxmxpxtx.bandcamp", 24)  # (Your plugin name, Cache time in hours)
+
 
 def build_url(query):
     base_url = sys.argv[0]
@@ -69,7 +75,7 @@ def build_genre_list():
     url = build_url({'mode': 'list_subgenre_songs', 'category': 'all', 'subcategory': 'all'})
     is_folder = True
     xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    genres = bandcamp.get_genres()
+    genres = cache.cacheFunction(bandcamp.get_genres)
     for genre in genres:
         list_item = xbmcgui.ListItem(label=genre['name'])
         url = build_url({'mode': 'list_subgenre', 'category': genre['value']})
@@ -83,7 +89,7 @@ def build_subgenre_list(genre):
     url = build_url({'mode': 'list_subgenre_songs', 'category': genre, 'subcategory': 'all'})
     is_folder = True
     xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    genres = bandcamp.get_subgenres()
+    genres = cache.cacheFunction(bandcamp.get_subgenres)
     for subgenre in genres[genre]:
         list_item = xbmcgui.ListItem(label=subgenre['name'])
         url = build_url({'mode': 'list_subgenre_songs', 'category': genre, 'subcategory': subgenre['value']})
