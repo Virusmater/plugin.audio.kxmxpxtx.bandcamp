@@ -1,9 +1,12 @@
 # https://docs.python.org/2.7/
 import sys
-import urllib
+
+from distutils.util import strtobool
 from future.standard_library import install_aliases
+
 install_aliases()
 from future.utils import (PY3)
+
 if PY3:
     from urllib.parse import parse_qs
 else:
@@ -13,7 +16,7 @@ from urllib.parse import urlencode
 import xbmcgui
 import xbmcplugin
 import xbmcaddon
-import xbmc
+import random
 from resources.lib.bandcamp_api import bandcamp
 from resources.lib.bandcamp_api.bandcamp import Band
 
@@ -22,14 +25,15 @@ def build_url(query):
     base_url = sys.argv[0]
     return base_url + '?' + urlencode(query)
 
+
 def build_main_menu():
     is_folder = True
-    #discover menu
+    # discover menu
     list_item = xbmcgui.ListItem(label='discover')
     url = build_url({'mode': 'list_discover'})
     xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    #collection menu
-    #don't add if not configured
+    # collection menu
+    # don't add if not configured
     if username == "":
         list_item = xbmcgui.ListItem(label='add username to access collection')
         url = build_url({'mode': 'settings'})
@@ -62,6 +66,7 @@ def build_album_list(albums):
     xbmcplugin.addDirectoryItems(addon_handle, albums_list, len(albums_list))
     xbmcplugin.endOfDirectory(addon_handle)
 
+
 def build_genre_list():
     # all
     list_item = xbmcgui.ListItem(label='all')
@@ -78,7 +83,7 @@ def build_genre_list():
 
 
 def build_subgenre_list(genre):
-    list_item = xbmcgui.ListItem(label='all '+genre)
+    list_item = xbmcgui.ListItem(label='all ' + genre)
     url = build_url({'mode': 'list_subgenre_songs', 'category': genre, 'subcategory': 'all'})
     is_folder = True
     xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
@@ -92,34 +97,33 @@ def build_subgenre_list(genre):
 
 
 def build_song_list(album, tracks):
-    song_list = []
     for track in tracks:
-        title = u"{number}. {track}".format(number=track.number, track=track.track_name)
-        li = xbmcgui.ListItem(label=title)
-        li.setInfo('music', {'duration': int(track.duration), 'tracknumber': track.number})
-        li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
-        li.setProperty('IsPlayable', 'true')
-        url = build_url({'mode': 'stream', 'url': track.file, 'title': title})
-        song_list.append((url, li, False))
-    xbmcplugin.addDirectoryItems(addon_handle, song_list, len(song_list))
+        xbmcplugin.addDirectoryItem(addon_handle, *create_track_item(None, album, track))
     xbmcplugin.setContent(addon_handle, 'songs')
     xbmcplugin.endOfDirectory(addon_handle)
 
+
 def build_featured_list(bands):
-    song_list = []
     for band in bands:
         for album in bands[band]:
             for track in bands[band][album]:
-                title = u"{band} - {track}".format(band=band.band_name, track=track.track_name)
-                li = xbmcgui.ListItem(label=title)
-                li.setInfo('music', {'duration': int(track.duration)})
-                li.setArt({'thumb': album.get_art_img(), 'fanart':album.get_art_img()})
-                li.setProperty('IsPlayable', 'true')
-                url = build_url({'mode': 'stream', 'url': track.file, 'title': title})
-                song_list.append((url, li, False))
-    xbmcplugin.addDirectoryItems(addon_handle, song_list, len(song_list))
+                xbmcplugin.addDirectoryItem(addon_handle, *create_track_item(band, album, track))
     xbmcplugin.setContent(addon_handle, 'songs')
     xbmcplugin.endOfDirectory(addon_handle)
+
+
+def create_track_item(band, album, track):
+    if track.number is None:
+        title = u"{band} - {track}".format(band=band.band_name, track=track.track_name)
+    else:
+        title = u"{number}. {track}".format(number=track.number, track=track.track_name)
+    li = xbmcgui.ListItem(label=title)
+    li.setInfo('music', {'duration': int(track.duration), 'album': album.album_name, 'genre': album.genre,
+                         'mediatype': 'song', 'comment': 'comment', 'tracknumber': track.number})
+    li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
+    li.setProperty('IsPlayable', 'true')
+    url = build_url({'mode': 'stream', 'url': track.file, 'title': title})
+    return url, li
 
 
 def play_song(url):
@@ -152,14 +156,27 @@ def main():
     elif mode[0] == 'list_subgenre_songs':
         genre = args.get('category', None)[0]
         subgenre = args.get('subcategory', None)[0]
-        build_featured_list(bandcamp.discover(genre, subgenre))
+        slices = []
+        if strtobool(my_addon.getSetting('slice_top')):
+            slices.append("top")
+        if strtobool(my_addon.getSetting('slice_new')):
+            slices.append("new")
+        if strtobool(my_addon.getSetting('slice_rec')):
+            slices.append("rec")
+        discover_dict = {}
+        for slice in slices:
+            discover_dict.update(bandcamp.discover(genre, subgenre, slice))
+        shuffle_list = list(discover_dict.items())
+        random.shuffle(shuffle_list)
+        discover_dict = dict(shuffle_list)
+        build_featured_list(discover_dict)
     elif mode[0] == 'settings':
         my_addon.openSettings()
 
 
 if __name__ == '__main__':
     my_addon = xbmcaddon.Addon()
-    username = my_addon.getSetting('username')
+    username = my_addon.getSetting('username')  # returns the string 'true' or 'false'
     bandcamp = bandcamp.Bandcamp(username)
     addon_handle = int(sys.argv[1])
     main()

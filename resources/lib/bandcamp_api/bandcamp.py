@@ -1,12 +1,14 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from builtins import *
+
+import json
+import time
 
 import requests
-import json
-from html.parser import HTMLParser
-import time
 import xbmc
+from builtins import *
+from html.parser import HTMLParser
+
 
 class Band:
     def __init__(self, band_id, band_name=""):
@@ -24,18 +26,19 @@ class Band:
 
 
 class Album:
-    def __init__(self, album_id, album_name, art_id, item_type="album"):
+    def __init__(self, album_id, album_name, art_id, item_type="album", genre=""):
         self.album_name = album_name
         self.art_id = art_id
         self.album_id = album_id
         self.item_type = item_type
+        self.genre = genre
 
     def get_art_img(self, quality=9):
         return "https://f4.bcbits.com/img/a0{art_id}_{quality}.jpg".format(art_id=self.art_id, quality=quality)
 
 
 class Track:
-    def __init__(self, track_name, file, duration, number=0):
+    def __init__(self, track_name, file, duration, number=None):
         self.track_name = track_name
         self.file = file
         self.duration = duration
@@ -81,7 +84,9 @@ class Bandcamp:
         for item in items:
             track = Track(item['featured_track']['title'], item['featured_track']['file']['mp3-128'],
                           item['featured_track']['duration'])
-            album = Album(album_id=item['id'], album_name=item['primary_text'], art_id=item['art_id'])
+            album_gerne = u'{genre} ({slice})'.format(genre=item['genre_text'], slice=slice)
+            album = Album(album_id=item['id'], album_name=item['primary_text'], art_id=item['art_id'],
+                          genre=album_gerne)
             band = Band(band_id=item['band_id'], band_name=item['secondary_text'])
             discover_list[band] = {album: [track]}
         print("got", genre, sub_genre, slice)
@@ -113,9 +118,8 @@ class Bandcamp:
             bands[band].update({album: [None]})
         return bands
 
-
     def get_album(self, album_id, item_type="album"):
-        url = "https://bandcamp.com/EmbeddedPlayer/{item_type}={album_id}"\
+        url = "https://bandcamp.com/EmbeddedPlayer/{item_type}={album_id}" \
             .format(album_id=album_id, item_type=item_type)
         xbmc.log(url, xbmc.LOGERROR)
         request = requests.get(url)
@@ -128,7 +132,7 @@ class Bandcamp:
             track_list.append(
                 Track(track['title'], track['file']['mp3-128'], track['duration'], number=track['tracknum'] + 1))
         art_id = player_data['album_art_id']
-        if item_type== "track":
+        if item_type == "track":
             art_id = track['art_id']
         album = Album(album_id, player_data['album_title'], art_id)
         return album, track_list

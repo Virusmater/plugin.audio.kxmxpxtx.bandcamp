@@ -3,4 +3,9 @@
     <category label="128">
         <setting label="20142" type="text" id="username" default=""/>
     </category>
+    <category label="Discover">
+        <setting label="Top" type="bool" id="slice_top" default="true"/>
+        <setting label="New" type="bool" id="slice_new" default="false"/>
+        <setting label="Recommended" type="bool" id="slice_rec" default="false"/>
+    </category>
 </settings>
