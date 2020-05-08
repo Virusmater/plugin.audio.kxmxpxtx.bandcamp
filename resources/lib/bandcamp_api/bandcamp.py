@@ -1,177 +1,150 @@
-# https://docs.python.org/2.7/
-import sys
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
 
-from future.standard_library import install_aliases
-install_aliases()
-from future.utils import (PY3)
-if PY3:
-    from urllib.parse import parse_qs
-else:
-    from urlparse import parse_qs
+import json
+import time
 
-from urllib.parse import urlencode
-import xbmcgui
-import xbmcplugin
-import xbmcaddon
-import random
-import xbmc
-from resources.lib.bandcamp_api import bandcamp
-from resources.lib.bandcamp_api.bandcamp import Band
+import requests
+from builtins import *
+from html.parser import HTMLParser
 
 
-def build_url(query):
-    base_url = sys.argv[0]
-    return base_url + '?' + urlencode(query)
+class Band:
+    def __init__(self, band_id, band_name=""):
+        self.band_name = band_name
+        self.band_id = str(band_id)
 
-def build_main_menu():
-    is_folder = True
-    #discover menu
-    list_item = xbmcgui.ListItem(label='discover')
-    url = build_url({'mode': 'list_discover'})
-    xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    #collection menu
-    #don't add if not configured
-    if username == "":
-        list_item = xbmcgui.ListItem(label='add username to access collection')
-        url = build_url({'mode': 'settings'})
-        xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    else:
-        list_item = xbmcgui.ListItem(label='collection')
-        url = build_url({'mode': 'list_collection'})
-        xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    xbmcplugin.endOfDirectory(addon_handle)
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.band_id == other.band_id
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.band_id)
 
 
-def build_band_list(bands):
-    band_list = []
-    for band in bands:
-        li = xbmcgui.ListItem(label=band.band_name)
-        url = build_url({'mode': 'list_albums', 'band_id': band.band_id})
-        band_list.append((url, li, True))
-    xbmcplugin.addDirectoryItems(addon_handle, band_list, len(band_list))
-    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
-    xbmcplugin.endOfDirectory(addon_handle)
+class Album:
+    def __init__(self, album_id, album_name, art_id, item_type="album", genre=""):
+        self.album_name = album_name
+        self.art_id = art_id
+        self.album_id = album_id
+        self.item_type = item_type
+        self.genre = genre
+
+    def get_art_img(self, quality=9):
+        return "https://f4.bcbits.com/img/a0{art_id}_{quality}.jpg".format(art_id=self.art_id, quality=quality)
 
 
-def build_album_list(albums):
-    albums_list = []
-    for album in albums:
-        li = xbmcgui.ListItem(label=album.album_name)
-        url = build_url({'mode': 'list_songs', 'album_id': album.album_id, 'item_type': album.item_type})
-        li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
-        albums_list.append((url, li, True))
-    xbmcplugin.addDirectoryItems(addon_handle, albums_list, len(albums_list))
-    xbmcplugin.endOfDirectory(addon_handle)
-
-def build_genre_list():
-    # all
-    list_item = xbmcgui.ListItem(label='all')
-    url = build_url({'mode': 'list_subgenre_songs', 'category': 'all', 'subcategory': 'all'})
-    is_folder = True
-    xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    genres = bandcamp.get_genres()
-    for genre in genres:
-        list_item = xbmcgui.ListItem(label=genre['name'])
-        url = build_url({'mode': 'list_subgenre', 'category': genre['value']})
-        is_folder = True
-        xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    xbmcplugin.endOfDirectory(addon_handle)
+class Track:
+    def __init__(self, track_name, file, duration, number=None):
+        self.track_name = track_name
+        self.file = file
+        self.duration = duration
+        self.number = number
 
 
-def build_subgenre_list(genre):
-    list_item = xbmcgui.ListItem(label='all '+genre)
-    url = build_url({'mode': 'list_subgenre_songs', 'category': genre, 'subcategory': 'all'})
-    is_folder = True
-    xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    genres = bandcamp.get_subgenres()
-    for subgenre in genres[genre]:
-        list_item = xbmcgui.ListItem(label=subgenre['name'])
-        url = build_url({'mode': 'list_subgenre_songs', 'category': genre, 'subcategory': subgenre['value']})
-        is_folder = True
-        xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    xbmcplugin.endOfDirectory(addon_handle)
+class _DataBlobParser(HTMLParser):
+    data_blob = None
+
+    def handle_starttag(self, tag, attrs):
+        for attr in attrs:
+            if attr[0] == "data-blob":
+                data_html = attr[1]
+                self.data_blob = json.loads(data_html)
 
 
-def build_song_list(album, tracks):
-    for track in tracks:
-        xbmcplugin.addDirectoryItem(addon_handle, *create_track_item(None, album, track))
-    xbmcplugin.setContent(addon_handle, 'songs')
-    xbmcplugin.endOfDirectory(addon_handle)
+class _PlayerDataParser(HTMLParser):
+    player_data = None
+
+    def handle_data(self, data):
+        if "playerdata" in data:
+            end = data.index('};') + 1
+            player_data = data[26:end]
+            self.player_data = json.loads(player_data)
 
 
-def build_featured_list(bands):
-    for band in bands:
-        for album in bands[band]:
-            for track in bands[band][album]:
-                xbmcplugin.addDirectoryItem(addon_handle, *create_track_item(band, album, track))
-    xbmcplugin.setContent(addon_handle, 'songs')
-    xbmcplugin.endOfDirectory(addon_handle)
+class Bandcamp:
 
+    def __init__(self, user_name):
+        self.data_blob = None
+        if user_name is None:
+            self.user_name = ""
+        else:
+            self.user_name = user_name
 
-def create_track_item(band, album, track):
-    if track.number is None:
-        title = u"{band} - {track}".format(band=band.band_name, track=track.track_name)
-    else:
-        title = u"{number}. {track}".format(number=track.number, track=track.track_name)
-    li = xbmcgui.ListItem(label=title)
-    li.setInfo('music', {'duration': int(track.duration), 'album': album.album_name, 'genre': album.genre,
-                         'mediatype': 'song', 'comment': 'comment', 'tracknumber': track.number})
-    li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
-    li.setProperty('IsPlayable', 'true')
-    url = build_url({'mode': 'stream', 'url': track.file, 'title': title})
-    return url, li
+    @staticmethod
+    def discover(genre="all", sub_genre="any", slice="best", page=0):
+        url = "https://bandcamp.com/api/discover/3/get_web?g={genre}&t={sub_genre}&s={slice}&p={page}&f=all" \
+            .format(genre=genre, sub_genre=sub_genre, slice=slice, page=page)
+        request = requests.get(url)
+        items = json.loads(request.text)['items']
+        discover_list = {}
+        for item in items:
+            track = Track(item['featured_track']['title'], item['featured_track']['file']['mp3-128'],
+                          item['featured_track']['duration'])
+            album_gerne = u'{genre} ({slice})'.format(genre=item['genre_text'], slice=slice)
+            album = Album(album_id=item['id'], album_name=item['primary_text'], art_id=item['art_id'],
+                          genre=album_gerne)
+            band = Band(band_id=item['band_id'], band_name=item['secondary_text'])
+            discover_list[band] = {album: [track]}
+        print("got", genre, sub_genre, slice)
+        return discover_list
 
-def play_song(url):
-    play_item = xbmcgui.ListItem(path=url)
-    xbmcplugin.setResolvedUrl(addon_handle, True, listitem=play_item)
+    def get_fan_id(self):
+        return self._get_data_blob()['fan_data']['fan_id']
 
+    def get_genres(self):
+        return self._get_data_blob()['signup_params']['genres']
 
-def main():
-    args = parse_qs(sys.argv[2][1:])
-    mode = args.get('mode', None)
-    if mode is None:
-        build_main_menu()
-    elif mode[0] == 'stream':
-        play_song(args['url'][0])
-    elif mode[0] == 'list_discover':
-        build_genre_list()
-    elif mode[0] == 'list_collection':
-        build_band_list(bandcamp.get_collection(bandcamp.get_fan_id()))
-    elif mode[0] == 'list_albums':
-        bands = bandcamp.get_collection(bandcamp.get_fan_id())
-        band = Band(band_id=args.get('band_id', None)[0])
-        build_album_list(bands[band])
-    elif mode[0] == 'list_songs':
-        album_id = args.get('album_id', None)[0]
-        item_type = args.get('item_type', None)[0]
-        build_song_list(*bandcamp.get_album(album_id=album_id, item_type=item_type))
-    elif mode[0] == 'list_subgenre':
-        genre = args.get('category', None)[0]
-        build_subgenre_list(genre)
-    elif mode[0] == 'list_subgenre_songs':
-        genre = args.get('category', None)[0]
-        subgenre = args.get('subcategory', None)[0]
-        slices = []
-        if my_addon.getSetting('slice_top') == 'true':
-            slices.append("top")
-        if my_addon.getSetting('slice_new') == 'true':
-            slices.append("new")
-        if my_addon.getSetting('slice_rec') == 'true':
-            slices.append("rec")
-        discover_dict = {}
-        for slice in slices:
-            discover_dict.update(bandcamp.discover(genre, subgenre, slice))
-        shuffle_list = list(discover_dict.items())
-        random.shuffle(shuffle_list)
-        discover_dict = dict(shuffle_list)
-        build_featured_list(discover_dict)
-    elif mode[0] == 'settings':
-        my_addon.openSettings()
+    def get_subgenres(self):
+        return self._get_data_blob()['signup_params']['subgenres']
 
+    def get_collection(self, fan_id, count=1000):
+        url = "https://bandcamp.com/api/fancollection/1/collection_items"
+        token = self._get_token()
+        body = '{{"fan_id": "{fan_id}", "older_than_token": "{token}", "count":"{count}"}}' \
+            .format(fan_id=fan_id, token=token, count=count)
+        x = requests.post(url, data=body)
+        items = json.loads(x.text)['items']
+        bands = {}
+        for item in items:
+            album = Album(album_id=item['item_id'], album_name=item['item_title'],
+                          art_id=item['item_art_id'], item_type=item['item_type'])
+            band = Band(band_id=item['band_id'], band_name=item['band_name'])
+            if band not in bands:
+                bands[band] = {}
+            bands[band].update({album: [None]})
+        return bands
 
-if __name__ == '__main__':
-    my_addon = xbmcaddon.Addon()
-    username = my_addon.getSetting('username')  # returns the string 'true' or 'false'
-    bandcamp = bandcamp.Bandcamp(username)
-    addon_handle = int(sys.argv[1])
-    main()
+    def get_album(self, album_id, item_type="album"):
+        url = "https://bandcamp.com/EmbeddedPlayer/{item_type}={album_id}" \
+            .format(album_id=album_id, item_type=item_type)
+        request = requests.get(url)
+        parser = _PlayerDataParser()
+        content = request.text
+        parser.feed(content)
+        player_data = parser.player_data
+        track_list = []
+        for track in player_data['tracks']:
+            track_list.append(
+                Track(track['title'], track['file']['mp3-128'], track['duration'], number=track['tracknum'] + 1))
+        art_id = player_data['album_art_id']
+        if item_type == "track":
+            art_id = track['art_id']
+        album = Album(album_id, player_data['album_title'], art_id)
+        return album, track_list
+
+    @staticmethod
+    def _get_token():
+        return str(int(time.time())) + "::FOO::"
+
+    def _get_data_blob(self):
+        if self.data_blob is None:
+            url = "https://bandcamp.com/{user_name}".format(user_name=self.user_name)
+            request = requests.get(url)
+            parser = _DataBlobParser()
+            content = request.content.decode('utf-8')
+            parser.feed(content)
+            self.data_blob = parser.data_blob
+        return self.data_blob

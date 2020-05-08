@@ -1,12 +1,9 @@
 # https://docs.python.org/2.7/
 import sys
 
-from distutils.util import strtobool
 from future.standard_library import install_aliases
-
 install_aliases()
 from future.utils import (PY3)
-
 if PY3:
     from urllib.parse import parse_qs
 else:
@@ -17,6 +14,7 @@ import xbmcgui
 import xbmcplugin
 import xbmcaddon
 import random
+import xbmc
 from resources.lib.bandcamp_api import bandcamp
 from resources.lib.bandcamp_api.bandcamp import Band
 
@@ -25,15 +23,14 @@ def build_url(query):
     base_url = sys.argv[0]
     return base_url + '?' + urlencode(query)
 
-
 def build_main_menu():
     is_folder = True
-    # discover menu
+    #discover menu
     list_item = xbmcgui.ListItem(label='discover')
     url = build_url({'mode': 'list_discover'})
     xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    # collection menu
-    # don't add if not configured
+    #collection menu
+    #don't add if not configured
     if username == "":
         list_item = xbmcgui.ListItem(label='add username to access collection')
         url = build_url({'mode': 'settings'})
@@ -66,7 +63,6 @@ def build_album_list(albums):
     xbmcplugin.addDirectoryItems(addon_handle, albums_list, len(albums_list))
     xbmcplugin.endOfDirectory(addon_handle)
 
-
 def build_genre_list():
     # all
     list_item = xbmcgui.ListItem(label='all')
@@ -83,7 +79,7 @@ def build_genre_list():
 
 
 def build_subgenre_list(genre):
-    list_item = xbmcgui.ListItem(label='all ' + genre)
+    list_item = xbmcgui.ListItem(label='all '+genre)
     url = build_url({'mode': 'list_subgenre_songs', 'category': genre, 'subcategory': 'all'})
     is_folder = True
     xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
@@ -125,7 +121,6 @@ def create_track_item(band, album, track):
     url = build_url({'mode': 'stream', 'url': track.file, 'title': title})
     return url, li
 
-
 def play_song(url):
     play_item = xbmcgui.ListItem(path=url)
     xbmcplugin.setResolvedUrl(addon_handle, True, listitem=play_item)
@@ -157,11 +152,11 @@ def main():
         genre = args.get('category', None)[0]
         subgenre = args.get('subcategory', None)[0]
         slices = []
-        if strtobool(my_addon.getSetting('slice_top')):
+        if my_addon.getSetting('slice_top') == 'true':
             slices.append("top")
-        if strtobool(my_addon.getSetting('slice_new')):
+        if my_addon.getSetting('slice_new') == 'true':
             slices.append("new")
-        if strtobool(my_addon.getSetting('slice_rec')):
+        if my_addon.getSetting('slice_rec') == 'true':
             slices.append("rec")
         discover_dict = {}
         for slice in slices:
