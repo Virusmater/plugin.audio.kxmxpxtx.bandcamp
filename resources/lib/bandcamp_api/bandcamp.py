@@ -1,5 +1,6 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
+from future.utils import (PY2)
 
 import json
 import time
@@ -149,7 +150,9 @@ class Bandcamp:
         return band, albums
 
     def search(self, query):
-        url = "https://bandcamp.com/api/fuzzysearch/1/autocomplete?q={query}".format(query=query.decode('utf-8'))
+        if PY2:
+            query = query.decode('utf-8')
+        url = "https://bandcamp.com/api/fuzzysearch/1/autocomplete?q={query}".format(query=query)
         request = requests.get(url)
         results = json.loads(request.text)['auto']['results']
         items = []
