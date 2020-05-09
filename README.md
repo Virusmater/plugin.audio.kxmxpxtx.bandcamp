@@ -21,4 +21,3 @@ download zip and add it to Kodi
 * configure cover arts quality
 * add setting for discovery playlist size
 * add personal mix (e.g top punk-hardcore + new black metal)
-* remove hardcoded strings

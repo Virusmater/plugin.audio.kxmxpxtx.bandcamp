@@ -126,8 +126,10 @@ class Bandcamp:
         player_data = parser.player_data
         track_list = []
         for track in player_data['tracks']:
-            track_list.append(
-                Track(track['title'], track['file']['mp3-128'], track['duration'], number=track['tracknum'] + 1))
+            # sometimes not all tracks are available online
+            if track['file'] is not None:
+                track_list.append(
+                    Track(track['title'], track['file']['mp3-128'], track['duration'], number=track['tracknum'] + 1))
         art_id = player_data['album_art_id']
         if item_type == "track":
             art_id = track['art_id']

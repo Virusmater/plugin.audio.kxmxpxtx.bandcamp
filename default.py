@@ -79,7 +79,7 @@ def build_search_result_list(items):
 def build_featured_list(bands):
     for band in bands:
         for album in bands[band]:
-            track_list = list_items.get_track_items(band=band, album=album, tracks=bands[band][album])
+            track_list = list_items.get_track_items(band=band, album=album, tracks=bands[band][album], to_album=True)
             xbmcplugin.addDirectoryItems(addon_handle, track_list, len(track_list))
     xbmcplugin.setContent(addon_handle, 'songs')
     xbmcplugin.endOfDirectory(addon_handle)
@@ -135,12 +135,11 @@ def main():
         build_featured_list(discover_dict)
     elif mode[0] == 'search':
         action = args.get("action", None)[0]
-        xbmc.log(str(action), xbmc.LOGERROR)
         query = args.get("query", [""])[0]
         if action == "new":
-            query = xbmcgui.Dialog().input(addon.getLocalizedString(30101))
-            # search_history.add(query)
-        search(query)
+            query = xbmcgui.Dialog().input(addon.getLocalizedString(30103))
+        if query:
+            search(query)
     elif mode[0] == 'settings':
         addon.openSettings()
 
@@ -148,8 +147,7 @@ def main():
 if __name__ == '__main__':
     addon = xbmcaddon.Addon()
     list_items = ListItems(addon)
-    username = addon.getSetting('username')  # returns the string 'true' or 'false'
+    username = addon.getSetting('username')
     bandcamp = bandcamp.Bandcamp(username)
-    # search("minor treat")
     addon_handle = int(sys.argv[1])
     main()
