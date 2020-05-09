@@ -134,21 +134,35 @@ class Bandcamp:
         album = Album(album_id, player_data['album_title'], art_id)
         return album, track_list
 
+    def get_band(self, band_id):
+        url = "https://bandcamp.com/api/mobile/24/band_details"
+        body = '{"band_id": {band_id}}'.format(band_id=band_id)
+        request = requests.post(url, data=body)
+        band_details = json.loads(request.text)
+        band = Band(band_id=band_details['id'], band_name=band_details['name'])
+        albums = []
+        for album in band_details['discography']:
+            albums.append(Album(album_id=album['item_id'], album_name=album['title'],
+                                art_id=album['art_id'], item_type=album['item_type']))
+        return band, albums
+
     def search(self, query):
-        url = "https://bandcamp.com/api/fuzzysearch/1/autocomplete?q={query}".format(query=query)
+        url = "https://bandcamp.com/api/fuzzysearch/1/autocomplete?q={query}".format(query=query.decode('utf-8'))
         request = requests.get(url)
         results = json.loads(request.text)['auto']['results']
         items = []
         for result in results:
+            item = None
             if result['type'] == "b":
                 item = Band(band_id=result['id'], band_name=result['name'])
             elif result['type'] == "a":
                 item = Album(album_id=result['id'], album_name=result['name'],
-                          art_id=result['art_id'], item_type='album')
+                             art_id=result['art_id'], item_type='album')
             elif result['type'] == "t":
-                item = Track(track_name=result['name'], file=None,
-                              duration=None)
-            items.append(item)
+                item = Album(album_id=result['id'], album_name=result['name'],
+                             art_id=result['art_id'], item_type='track')
+            if item is not None:
+                items.append(item)
         return items
 
 

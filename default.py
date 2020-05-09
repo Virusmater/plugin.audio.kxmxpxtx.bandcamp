@@ -2,6 +2,7 @@
 import sys
 
 from future.standard_library import install_aliases
+
 install_aliases()
 from future.utils import (PY3)
 if PY3:
@@ -9,14 +10,14 @@ if PY3:
 else:
     from urlparse import parse_qs
 
-from urllib.parse import urlencode
 import xbmcgui
 import xbmcplugin
 import xbmcaddon
 import random
 import xbmc
 from resources.lib.bandcamp_api import bandcamp
-from resources.lib.bandcamp_api.bandcamp import Band
+from resources.lib.bandcamp_api.bandcamp import Band, Album
+from resources.lib.kodi import ListItems
 
 try:
     import StorageServer
@@ -25,118 +26,71 @@ except:
 cache = StorageServer.StorageServer("plugin.audio.kxmxpxtx.bandcamp", 24)  # (Your plugin name, Cache time in hours)
 
 
-def build_url(query):
-    base_url = sys.argv[0]
-    return base_url + '?' + urlencode(query)
-
 def build_main_menu():
-    is_folder = True
-    #discover menu
-    list_item = xbmcgui.ListItem(label='discover')
-    url = build_url({'mode': 'list_discover'})
-    xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    #collection menu
-    #don't add if not configured
-    if username == "":
-        list_item = xbmcgui.ListItem(label='add username to access collection')
-        url = build_url({'mode': 'settings'})
-        xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    else:
-        list_item = xbmcgui.ListItem(label='collection')
-        url = build_url({'mode': 'list_collection'})
-        xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
+    root_items = ListItems.get_root_items(username)
+    xbmcplugin.addDirectoryItems(addon_handle, root_items, len(root_items))
     xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_band_list(bands):
-    band_list = []
-    for band in bands:
-        li = xbmcgui.ListItem(label=band.band_name)
-        url = build_url({'mode': 'list_albums', 'band_id': band.band_id})
-        band_list.append((url, li, True))
+    band_list = ListItems.get_band_items(bands)
     xbmcplugin.addDirectoryItems(addon_handle, band_list, len(band_list))
     xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
     xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_album_list(albums):
-    albums_list = []
-    for album in albums:
-        li = xbmcgui.ListItem(label=album.album_name)
-        url = build_url({'mode': 'list_songs', 'album_id': album.album_id, 'item_type': album.item_type})
-        li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
-        albums_list.append((url, li, True))
+    albums_list = ListItems.get_album_items(albums)
     xbmcplugin.addDirectoryItems(addon_handle, albums_list, len(albums_list))
     xbmcplugin.endOfDirectory(addon_handle)
 
+
 def build_genre_list():
-    # all
-    list_item = xbmcgui.ListItem(label='all')
-    url = build_url({'mode': 'list_subgenre_songs', 'category': 'all', 'subcategory': 'all'})
-    is_folder = True
-    xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    genres = cache.cacheFunction(bandcamp.get_genres)
-    for genre in genres:
-        list_item = xbmcgui.ListItem(label=genre['name'])
-        url = build_url({'mode': 'list_subgenre', 'category': genre['value']})
-        is_folder = True
-        xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
+    genre_list = ListItems.get_genre_items(cache.cacheFunction(bandcamp.get_genres))
+    xbmcplugin.addDirectoryItems(addon_handle, genre_list, len(genre_list))
     xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_subgenre_list(genre):
-    list_item = xbmcgui.ListItem(label='all '+genre)
-    url = build_url({'mode': 'list_subgenre_songs', 'category': genre, 'subcategory': 'all'})
-    is_folder = True
-    xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
-    genres = cache.cacheFunction(bandcamp.get_subgenres)
-    for subgenre in genres[genre]:
-        list_item = xbmcgui.ListItem(label=subgenre['name'])
-        url = build_url({'mode': 'list_subgenre_songs', 'category': genre, 'subcategory': subgenre['value']})
-        is_folder = True
-        xbmcplugin.addDirectoryItem(addon_handle, url, list_item, is_folder)
+    subgenre_list = ListItems.get_subgenre_items(genre, cache.cacheFunction(bandcamp.get_subgenres))
+    xbmcplugin.addDirectoryItems(addon_handle, subgenre_list, len(subgenre_list))
     xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_song_list(album, tracks):
-    for track in tracks:
-        xbmcplugin.addDirectoryItem(addon_handle, *create_track_item(None, album, track))
+    track_list = ListItems.get_track_items(band=None, album=album, tracks=tracks)
+    xbmcplugin.addDirectoryItems(addon_handle, track_list, len(track_list))
     xbmcplugin.setContent(addon_handle, 'songs')
+    xbmcplugin.endOfDirectory(addon_handle)
+
+
+def build_search_result_list(items):
+    item_list = []
+    for item in items:
+        if isinstance(item, Band):
+            item_list += ListItems.get_band_items([item])
+        elif isinstance(item, Album):
+            item_list += ListItems.get_album_items([item])
+    xbmcplugin.addDirectoryItems(addon_handle, item_list, len(item_list))
     xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_featured_list(bands):
     for band in bands:
         for album in bands[band]:
-            for track in bands[band][album]:
-                xbmcplugin.addDirectoryItem(addon_handle, *create_track_item(band, album, track))
+            track_list = ListItems.get_track_items(band=band, album=album, tracks=bands[band][album])
+            xbmcplugin.addDirectoryItems(addon_handle, track_list, len(track_list))
     xbmcplugin.setContent(addon_handle, 'songs')
     xbmcplugin.endOfDirectory(addon_handle)
 
 
-def create_track_item(band, album, track):
-    if track.number is None:
-        title = u"{band} - {track}".format(band=band.band_name, track=track.track_name)
-    else:
-        title = u"{number}. {track}".format(number=track.number, track=track.track_name)
-    li = xbmcgui.ListItem(label=title)
-    li.setInfo('music', {'duration': int(track.duration), 'album': album.album_name, 'genre': album.genre,
-                         'mediatype': 'song', 'tracknumber': track.number, 'title': track.track_name})
-    li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
-    li.setProperty('IsPlayable', 'true')
-    url = build_url({'mode': 'stream', 'url': track.file, 'title': title})
-
-    album_url = build_url({'mode': 'list_songs', 'album_id': album.album_id, 'item_type': 'album'})
-    cmd = 'Container.Update({album_url})'.format(album_url=album_url)
-    commands = []
-    commands.append(('Go to album', cmd))
-    li.addContextMenuItems(commands)
-
-    return url, li
-
 def play_song(url):
     play_item = xbmcgui.ListItem(path=url)
     xbmcplugin.setResolvedUrl(addon_handle, True, listitem=play_item)
+
+
+def search(query):
+    build_search_result_list(bandcamp.search(query))
 
 
 def main():
@@ -165,11 +119,11 @@ def main():
         genre = args.get('category', None)[0]
         subgenre = args.get('subcategory', None)[0]
         slices = []
-        if my_addon.getSetting('slice_top') == 'true':
+        if addon.getSetting('slice_top') == 'true':
             slices.append("top")
-        if my_addon.getSetting('slice_new') == 'true':
+        if addon.getSetting('slice_new') == 'true':
             slices.append("new")
-        if my_addon.getSetting('slice_rec') == 'true':
+        if addon.getSetting('slice_rec') == 'true':
             slices.append("rec")
         discover_dict = {}
         for slice in slices:
@@ -178,13 +132,22 @@ def main():
         random.shuffle(shuffle_list)
         discover_dict = dict(shuffle_list)
         build_featured_list(discover_dict)
+    elif mode[0] == 'search':
+        action = args.get("action", None)[0]
+        xbmc.log(str(action), xbmc.LOGERROR)
+        query = args.get("query", [""])[0]
+        if action == "new":
+            query = xbmcgui.Dialog().input(addon.getLocalizedString(30101))
+            # search_history.add(query)
+        search(query)
     elif mode[0] == 'settings':
-        my_addon.openSettings()
+        addon.openSettings()
 
 
 if __name__ == '__main__':
-    my_addon = xbmcaddon.Addon()
-    username = my_addon.getSetting('username')  # returns the string 'true' or 'false'
+    addon = xbmcaddon.Addon()
+    username = addon.getSetting('username')  # returns the string 'true' or 'false'
     bandcamp = bandcamp.Bandcamp(username)
+    # search("minor treat")
     addon_handle = int(sys.argv[1])
     main()
