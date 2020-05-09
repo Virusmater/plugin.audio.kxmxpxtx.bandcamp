@@ -5,6 +5,7 @@ from future.standard_library import install_aliases
 
 install_aliases()
 from future.utils import (PY3)
+
 if PY3:
     from urllib.parse import parse_qs
 else:
@@ -17,7 +18,7 @@ import random
 import xbmc
 from resources.lib.bandcamp_api import bandcamp
 from resources.lib.bandcamp_api.bandcamp import Band, Album
-from resources.lib.kodi import ListItems
+from resources.lib.kodi.ListItems import ListItems
 
 try:
     import StorageServer
@@ -27,38 +28,38 @@ cache = StorageServer.StorageServer("plugin.audio.kxmxpxtx.bandcamp", 24)  # (Yo
 
 
 def build_main_menu():
-    root_items = ListItems.get_root_items(username)
+    root_items = list_items.get_root_items(username)
     xbmcplugin.addDirectoryItems(addon_handle, root_items, len(root_items))
     xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_band_list(bands):
-    band_list = ListItems.get_band_items(bands)
+    band_list = list_items.get_band_items(bands)
     xbmcplugin.addDirectoryItems(addon_handle, band_list, len(band_list))
     xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
     xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_album_list(albums):
-    albums_list = ListItems.get_album_items(albums)
+    albums_list = list_items.get_album_items(albums)
     xbmcplugin.addDirectoryItems(addon_handle, albums_list, len(albums_list))
     xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_genre_list():
-    genre_list = ListItems.get_genre_items(cache.cacheFunction(bandcamp.get_genres))
+    genre_list = list_items.get_genre_items(cache.cacheFunction(bandcamp.get_genres))
     xbmcplugin.addDirectoryItems(addon_handle, genre_list, len(genre_list))
     xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_subgenre_list(genre):
-    subgenre_list = ListItems.get_subgenre_items(genre, cache.cacheFunction(bandcamp.get_subgenres))
+    subgenre_list = list_items.get_subgenre_items(genre, cache.cacheFunction(bandcamp.get_subgenres))
     xbmcplugin.addDirectoryItems(addon_handle, subgenre_list, len(subgenre_list))
     xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_song_list(album, tracks):
-    track_list = ListItems.get_track_items(band=None, album=album, tracks=tracks)
+    track_list = list_items.get_track_items(band=None, album=album, tracks=tracks)
     xbmcplugin.addDirectoryItems(addon_handle, track_list, len(track_list))
     xbmcplugin.setContent(addon_handle, 'songs')
     xbmcplugin.endOfDirectory(addon_handle)
@@ -68,9 +69,9 @@ def build_search_result_list(items):
     item_list = []
     for item in items:
         if isinstance(item, Band):
-            item_list += ListItems.get_band_items([item])
+            item_list += list_items.get_band_items([item])
         elif isinstance(item, Album):
-            item_list += ListItems.get_album_items([item])
+            item_list += list_items.get_album_items([item])
     xbmcplugin.addDirectoryItems(addon_handle, item_list, len(item_list))
     xbmcplugin.endOfDirectory(addon_handle)
 
@@ -78,7 +79,7 @@ def build_search_result_list(items):
 def build_featured_list(bands):
     for band in bands:
         for album in bands[band]:
-            track_list = ListItems.get_track_items(band=band, album=album, tracks=bands[band][album])
+            track_list = list_items.get_track_items(band=band, album=album, tracks=bands[band][album])
             xbmcplugin.addDirectoryItems(addon_handle, track_list, len(track_list))
     xbmcplugin.setContent(addon_handle, 'songs')
     xbmcplugin.endOfDirectory(addon_handle)
@@ -146,6 +147,7 @@ def main():
 
 if __name__ == '__main__':
     addon = xbmcaddon.Addon()
+    list_items = ListItems(addon)
     username = addon.getSetting('username')  # returns the string 'true' or 'false'
     bandcamp = bandcamp.Bandcamp(username)
     # search("minor treat")

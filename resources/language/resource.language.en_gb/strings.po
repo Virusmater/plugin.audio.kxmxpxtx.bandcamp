@@ -1,0 +1,70 @@
+# Kodi Media Center language file
+# Addon Name: Bandcamp
+# Addon id: plugin.audio.kxmxpxtx.bandcamp
+# Addon Provider: kxmxpxtx
+
+# Settings - General
+msgctxt "#30001"
+msgid "General"
+msgstr ""
+
+msgctxt "#30002"
+msgid "Username"
+msgstr ""
+
+msgctxt "#30003"
+msgid "Discover"
+msgstr ""
+
+msgctxt "#30011"
+msgid "Top"
+msgstr ""
+
+msgctxt "#30012"
+msgid "New"
+msgstr ""
+
+msgctxt "#30013"
+msgid "Recommended"
+msgstr ""
+
+# GUI main menu
+msgctxt "#30101"
+msgid "Discover"
+msgstr ""
+
+msgctxt "#30102"
+msgid "Collection"
+msgstr ""
+
+msgctxt "#30103"
+msgid "Search"
+msgstr ""
+
+
+# GUI - Root
+msgctxt "#30101"
+msgid "Search"
+msgstr ""
+
+msgctxt "#30102"
+msgid "Charts"
+msgstr ""
+
+msgctxt "#30103"
+msgid "Discover"
+msgstr ""
+
+msgctxt "#30104"
+msgid "Add your username to access the collection"
+msgstr ""
+
+
+# GUI - Discover
+msgctxt "#30201"
+msgid "All"
+msgstr ""
+
+msgctxt "#30202"
+msgid "Go to the album"
+msgstr ""
