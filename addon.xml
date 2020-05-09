@@ -9,9 +9,9 @@
         <provides>audio</provides>
     </extension>
     <extension point="xbmc.addon.metadata">
-        <summary lang="en">https://bandcamp.com</summary>
+        <summary lang="en_GB">https://bandcamp.com</summary>
         <license>MIT</license>
-        <description lang="en">Browse discovery and your collection</description>
+        <description lang="en_GB">Browse discovery and your collection</description>
         <platform>all</platform>
             <assets>
                 <icon>icon.png</icon>

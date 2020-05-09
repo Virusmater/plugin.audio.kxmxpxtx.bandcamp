@@ -19,21 +19,21 @@ class ListItems:
     def get_root_items(self, username):
         items = []
         # discover menu
-        li = xbmcgui.ListItem(label='discover')
+        li = xbmcgui.ListItem(label=self.addon.getLocalizedString(30101))
         url = self._build_url({'mode': 'list_discover'})
         items.append((url, li, True))
         # collection menu
         # don't add if not configured
         if username == "":
-            li = xbmcgui.ListItem(label='add username to access collection')
+            li = xbmcgui.ListItem(label=self.addon.getLocalizedString(30104))
             url = self._build_url({'mode': 'settings'})
             items.append((url, li, True))
         else:
-            li = xbmcgui.ListItem(label='collection')
+            li = xbmcgui.ListItem(label=self.addon.getLocalizedString(30102))
             url = self._build_url({'mode': 'list_collection'})
             items.append((url, li, True))
         # search
-        li = xbmcgui.ListItem(label="Search")
+        li = xbmcgui.ListItem(label=self.addon.getLocalizedString(30103))
         url = self._build_url({'mode': 'search', 'action': 'new'})
         items.append((url, li, True))
         return items
@@ -49,7 +49,7 @@ class ListItems:
 
     def get_genre_items(self, genres):
         items = []
-        li = xbmcgui.ListItem(label='all')
+        li = xbmcgui.ListItem(label=self.addon.getLocalizedString(30201))
         url = self._build_url({'mode': 'list_subgenre_songs', 'category': 'all', 'subcategory': 'all'})
         items.append((url, li, True))
         for genre in genres:
@@ -60,7 +60,7 @@ class ListItems:
 
     def get_subgenre_items(self, genre, subgenres):
         items = []
-        li = xbmcgui.ListItem(label='all ' + genre)
+        li = xbmcgui.ListItem(label=self.addon.getLocalizedString(30201) + " " + genre)
         url = self._build_url({'mode': 'list_subgenre_songs', 'category': genre, 'subcategory': 'all'})
         items.append((url, li, True))
         for subgenre in subgenres[genre]:
@@ -82,10 +82,9 @@ class ListItems:
             li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
             li.setProperty('IsPlayable', 'true')
             url = self._build_url({'mode': 'stream', 'url': track.file, 'title': title})
-
             album_url = self._build_url({'mode': 'list_songs', 'album_id': album.album_id, 'item_type': 'album'})
             cmd = 'Container.Update({album_url})'.format(album_url=album_url)
-            commands = [('Go to the album', cmd)]
+            commands = [(self.addon.getLocalizedString(30202), cmd)]
             li.addContextMenuItems(commands)
             items.append((url, li, False))
         return items
