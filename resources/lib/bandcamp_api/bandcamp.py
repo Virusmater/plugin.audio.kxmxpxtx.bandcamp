@@ -83,12 +83,11 @@ class Bandcamp:
         for item in items:
             track = Track(item['featured_track']['title'], item['featured_track']['file']['mp3-128'],
                           item['featured_track']['duration'])
-            album_gerne = u'{genre} ({slice})'.format(genre=item['genre_text'], slice=slice)
+            album_genre = u'{genre} ({slice})'.format(genre=item['genre_text'], slice=slice)
             album = Album(album_id=item['id'], album_name=item['primary_text'], art_id=item['art_id'],
-                          genre=album_gerne)
+                          genre=album_genre)
             band = Band(band_id=item['band_id'], band_name=item['secondary_text'])
             discover_list[band] = {album: [track]}
-        print("got", genre, sub_genre, slice)
         return discover_list
 
     def get_fan_id(self):
@@ -134,6 +133,24 @@ class Bandcamp:
             art_id = track['art_id']
         album = Album(album_id, player_data['album_title'], art_id)
         return album, track_list
+
+    def search(self, query):
+        url = "https://bandcamp.com/api/fuzzysearch/1/autocomplete?q={query}".format(query=query)
+        request = requests.get(url)
+        results = json.loads(request.text)['auto']['results']
+        items = []
+        for result in results:
+            if result['type'] == "b":
+                item = Band(band_id=result['id'], band_name=result['name'])
+            elif result['type'] == "a":
+                item = Album(album_id=result['id'], album_name=result['name'],
+                          art_id=result['art_id'], item_type='album')
+            elif result['type'] == "t":
+                item = Track(track_name=result['name'], file=None,
+                              duration=None)
+            items.append(item)
+        return items
+
 
     @staticmethod
     def _get_token():
