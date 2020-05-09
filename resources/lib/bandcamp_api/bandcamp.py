@@ -1,11 +1,13 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from builtins import *
+from future.utils import (PY2)
+
+import json
+import time
 
 import requests
-import json
+from builtins import *
 from html.parser import HTMLParser
-import time
 
 
 class Band:
@@ -24,17 +26,19 @@ class Band:
 
 
 class Album:
-    def __init__(self, album_id, album_name, art_id):
+    def __init__(self, album_id, album_name, art_id, item_type="album", genre=""):
         self.album_name = album_name
         self.art_id = art_id
         self.album_id = album_id
+        self.item_type = item_type
+        self.genre = genre
 
     def get_art_img(self, quality=9):
         return "https://f4.bcbits.com/img/a0{art_id}_{quality}.jpg".format(art_id=self.art_id, quality=quality)
 
 
 class Track:
-    def __init__(self, track_name, file, duration, number=0):
+    def __init__(self, track_name, file, duration, number=None):
         self.track_name = track_name
         self.file = file
         self.duration = duration
@@ -80,10 +84,11 @@ class Bandcamp:
         for item in items:
             track = Track(item['featured_track']['title'], item['featured_track']['file']['mp3-128'],
                           item['featured_track']['duration'])
-            album = Album(album_id=item['id'], album_name=item['primary_text'], art_id=item['art_id'])
+            album_genre = u'{genre} ({slice})'.format(genre=item['genre_text'], slice=slice)
+            album = Album(album_id=item['id'], album_name=item['primary_text'], art_id=item['art_id'],
+                          genre=album_genre)
             band = Band(band_id=item['band_id'], band_name=item['secondary_text'])
             discover_list[band] = {album: [track]}
-        print("got", genre, sub_genre, slice)
         return discover_list
 
     def get_fan_id(self):
@@ -104,15 +109,17 @@ class Bandcamp:
         items = json.loads(x.text)['items']
         bands = {}
         for item in items:
-            album = Album(album_id=item['item_id'], album_name=item['item_title'], art_id=item['item_art_id'])
+            album = Album(album_id=item['item_id'], album_name=item['item_title'],
+                          art_id=item['item_art_id'], item_type=item['item_type'])
             band = Band(band_id=item['band_id'], band_name=item['band_name'])
             if band not in bands:
                 bands[band] = {}
             bands[band].update({album: [None]})
         return bands
 
-    def get_album(self, album_id):
-        url = "https://bandcamp.com/EmbeddedPlayer/album={album_id}".format(album_id=album_id)
+    def get_album(self, album_id, item_type="album"):
+        url = "https://bandcamp.com/EmbeddedPlayer/{item_type}={album_id}" \
+            .format(album_id=album_id, item_type=item_type)
         request = requests.get(url)
         parser = _PlayerDataParser()
         content = request.text
@@ -120,10 +127,49 @@ class Bandcamp:
         player_data = parser.player_data
         track_list = []
         for track in player_data['tracks']:
-            track_list.append(
-                Track(track['title'], track['file']['mp3-128'], track['duration'], number=track['tracknum'] + 1))
-        album = Album(album_id, player_data['album_title'], player_data['album_art_id'])
+            # sometimes not all tracks are available online
+            if track['file'] is not None:
+                track_list.append(
+                    Track(track['title'], track['file']['mp3-128'], track['duration'], number=track['tracknum'] + 1))
+        art_id = player_data['album_art_id']
+        if item_type == "track":
+            art_id = track['art_id']
+        album = Album(album_id, player_data['album_title'], art_id)
         return album, track_list
+
+    def get_band(self, band_id):
+        url = "https://bandcamp.com/api/mobile/24/band_details"
+        body = '{"band_id": {band_id}}'.format(band_id=band_id)
+        request = requests.post(url, data=body)
+        band_details = json.loads(request.text)
+        band = Band(band_id=band_details['id'], band_name=band_details['name'])
+        albums = []
+        for album in band_details['discography']:
+            albums.append(Album(album_id=album['item_id'], album_name=album['title'],
+                                art_id=album['art_id'], item_type=album['item_type']))
+        return band, albums
+
+    def search(self, query):
+        if PY2:
+            query = query.decode('utf-8')
+        url = "https://bandcamp.com/api/fuzzysearch/1/autocomplete?q={query}".format(query=query)
+        request = requests.get(url)
+        results = json.loads(request.text)['auto']['results']
+        items = []
+        for result in results:
+            item = None
+            if result['type'] == "b":
+                item = Band(band_id=result['id'], band_name=result['name'])
+            elif result['type'] == "a":
+                item = Album(album_id=result['id'], album_name=result['name'],
+                             art_id=result['art_id'], item_type='album')
+            elif result['type'] == "t":
+                item = Album(album_id=result['id'], album_name=result['name'],
+                             art_id=result['art_id'], item_type='track')
+            if item is not None:
+                items.append(item)
+        return items
+
 
     @staticmethod
     def _get_token():

@@ -16,12 +16,8 @@ discover
 download zip and add it to Kodi
 
 # todo
-* add caches for genre/sub-genre, collection and fan_id
-* add search
-* add possibility to listen to all bands and albumst in the collection
+* add caches collection and fan_id
+* add possibility to listen to all bands and albums in the collection
 * configure cover arts quality
-* add setting for best/new/recommended discovery
 * add setting for discovery playlist size
 * add personal mix (e.g top punk-hardcore + new black metal)
-* go to album from discovery
-* single track handling. currently only band>album>track is supported
