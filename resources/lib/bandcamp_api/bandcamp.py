@@ -1,10 +1,15 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
+
+from future.moves import urllib
 from future.utils import (PY2)
 
 import json
 import time
+from future.standard_library import install_aliases
+install_aliases()
 
+from urllib.parse import unquote
 import requests
 from builtins import *
 from html.parser import HTMLParser
@@ -50,7 +55,7 @@ class _DataBlobParser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         for attr in attrs:
-            if attr[0] == "data-blob":
+            if attr[0] == "data-blob" and self.data_blob is None:
                 data_html = attr[1]
                 self.data_blob = json.loads(data_html)
 
@@ -137,6 +142,19 @@ class Bandcamp:
         album = Album(album_id, player_data['album_title'], art_id)
         return album, track_list
 
+    def get_album_by_url(self, url):
+        url = unquote(url)
+        request = requests.get(url)
+        parser = _DataBlobParser()
+        parser.feed(request.text)
+        if '/album/' in url:
+            album_id = parser.data_blob['album_id']
+            item_type = 'album'
+        elif '/track/' in url:
+            album_id = parser.data_blob['track_id']
+            item_type = 'track'
+        return self.get_album(album_id, item_type)
+
     def get_band(self, band_id):
         url = "https://bandcamp.com/api/mobile/24/band_details"
         body = '{"band_id": {band_id}}'.format(band_id=band_id)
@@ -184,3 +202,8 @@ class Bandcamp:
             parser.feed(content)
             self.data_blob = parser.data_blob
         return self.data_blob
+
+#
+# bandcamp = Bandcamp("")
+# alb = bandcamp.get_album_by_url("https%3A%2F%2Fshlemrock.bandcamp.com%2Ftrack%2F--7")
+# None

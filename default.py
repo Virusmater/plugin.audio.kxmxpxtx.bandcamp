@@ -140,6 +140,9 @@ def main():
             query = xbmcgui.Dialog().input(addon.getLocalizedString(30103))
         if query:
             search(query)
+    elif mode[0] == 'url':
+        url = args.get("url", None)[0]
+        build_song_list(*bandcamp.get_album_by_url(url))
     elif mode[0] == 'settings':
         addon.openSettings()
 
