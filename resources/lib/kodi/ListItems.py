@@ -78,7 +78,8 @@ class ListItems:
                 title = u"{number}. {track}".format(number=track.number, track=track.track_name)
             li = xbmcgui.ListItem(label=title)
             li.setInfo('music', {'duration': int(track.duration), 'album': album.album_name, 'genre': album.genre,
-                                 'mediatype': 'song', 'tracknumber': track.number, 'title': track.track_name})
+                                 'mediatype': 'song', 'tracknumber': track.number, 'title': track.track_name,
+                                 'artist': band.band_name})
             li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
             li.setProperty('IsPlayable', 'true')
             url = self._build_url({'mode': 'stream', 'url': track.file, 'title': title})
