@@ -122,6 +122,23 @@ class Bandcamp:
             bands[band].update({album: [None]})
         return bands
 
+    def get_wishlist(self, fan_id, count=1000):
+        url = "https://bandcamp.com/api/fancollection/1/wishlist_items"
+        token = self._get_token()
+        body = '{{"fan_id": "{fan_id}", "older_than_token": "{token}", "count":"{count}"}}' \
+            .format(fan_id=fan_id, token=token, count=count)
+        x = requests.post(url, data=body)
+        items = json.loads(x.text)['items']
+        bands = {}
+        for item in items:
+            album = Album(album_id=item['item_id'], album_name=item['item_title'],
+                          art_id=item['item_art_id'], item_type=item['item_type'])
+            band = Band(band_id=item['band_id'], band_name=item['band_name'])
+            if band not in bands:
+                bands[band] = {}
+            bands[band].update({album: [None]})
+        return bands
+
     def get_album(self, album_id, item_type="album"):
         url = "https://bandcamp.com/EmbeddedPlayer/{item_type}={album_id}" \
             .format(album_id=album_id, item_type=item_type)
@@ -203,8 +220,3 @@ class Bandcamp:
             parser.feed(content)
             self.data_blob = parser.data_blob
         return self.data_blob
-
-#
-# bandcamp = Bandcamp("")
-# alb = bandcamp.get_album_by_url("https%3A%2F%2Fshlemrock.bandcamp.com%2Ftrack%2F--7")
-# None

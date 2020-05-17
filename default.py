@@ -33,8 +33,8 @@ def build_main_menu():
     xbmcplugin.endOfDirectory(addon_handle)
 
 
-def build_band_list(bands):
-    band_list = list_items.get_band_items(bands)
+def build_band_list(bands, from_wishlist=False):
+    band_list = list_items.get_band_items(bands, from_wishlist)
     xbmcplugin.addDirectoryItems(addon_handle, band_list, len(band_list))
     xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
     xbmcplugin.endOfDirectory(addon_handle)
@@ -105,6 +105,12 @@ def main():
         build_genre_list()
     elif mode[0] == 'list_collection':
         build_band_list(bandcamp.get_collection(bandcamp.get_fan_id()))
+    elif mode[0] == 'list_wishlist':
+        build_band_list(bandcamp.get_wishlist(bandcamp.get_fan_id()), from_wishlist=True)
+    elif mode[0] == 'list_wishlist_albums':
+        bands = bandcamp.get_wishlist(bandcamp.get_fan_id())
+        band = Band(band_id=args.get('band_id', None)[0])
+        build_album_list(bands[band])
     elif mode[0] == 'list_albums':
         bands = bandcamp.get_collection(bandcamp.get_fan_id())
         band = Band(band_id=args.get('band_id', None)[0])
@@ -143,11 +149,16 @@ def main():
     elif mode[0] == 'url':
         url = args.get("url", None)[0]
         build_song_list(*bandcamp.get_album_by_url(url))
+        xbmc.executeJSONRPC(
+            '{"jsonrpc":"2.0","method":"Input.Down","id":1}')
+        xbmc.executeJSONRPC(
+            '{"jsonrpc":"2.0","method":"Input.Select","id":1}')
     elif mode[0] == 'settings':
         addon.openSettings()
 
 
 if __name__ == '__main__':
+    xbmc.log("sys.argv:" + str(sys.argv), xbmc.LOGDEBUG)
     addon = xbmcaddon.Addon()
     list_items = ListItems(addon)
     username = addon.getSetting('username')
