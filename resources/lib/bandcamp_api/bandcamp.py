@@ -16,7 +16,7 @@ from html.parser import HTMLParser
 
 
 class Band:
-    def __init__(self, band_id, band_name=""):
+    def __init__(self, band_id=None, band_name=""):
         self.band_name = band_name
         self.band_id = str(band_id)
 
@@ -139,8 +139,9 @@ class Bandcamp:
         art_id = player_data['album_art_id']
         if item_type == "track":
             art_id = track['art_id']
+        band = Band(band_name=player_data['artist'])
         album = Album(album_id, player_data['album_title'], art_id)
-        return album, track_list
+        return band, album, track_list
 
     def get_album_by_url(self, url):
         url = unquote(url)

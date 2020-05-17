@@ -58,8 +58,8 @@ def build_subgenre_list(genre):
     xbmcplugin.endOfDirectory(addon_handle)
 
 
-def build_song_list(album, tracks):
-    track_list = list_items.get_track_items(band=None, album=album, tracks=tracks)
+def build_song_list(band, album, tracks):
+    track_list = list_items.get_track_items(band=band, album=album, tracks=tracks)
     xbmcplugin.addDirectoryItems(addon_handle, track_list, len(track_list))
     xbmcplugin.setContent(addon_handle, 'songs')
     xbmcplugin.endOfDirectory(addon_handle)
