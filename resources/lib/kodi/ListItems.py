@@ -84,6 +84,7 @@ class ListItems:
             li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
             li.setProperty('IsPlayable', 'true')
             url = self._build_url({'mode': 'stream', 'url': track.file, 'title': title})
+            li.setPath(url)
             if to_album:
                 album_url = self._build_url({'mode': 'list_songs', 'album_id': album.album_id, 'item_type': 'album'})
                 cmd = 'Container.Update({album_url})'.format(album_url=album_url)
