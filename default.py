@@ -77,7 +77,7 @@ def build_search_result_list(items):
     item_list = []
     for item in items:
         if isinstance(item, Band):
-            item_list += list_items.get_band_items([item])
+            item_list += list_items.get_band_items([item], from_search=True)
         elif isinstance(item, Album):
             item_list += list_items.get_album_items([item])
     xbmcplugin.addDirectoryItems(addon_handle, item_list, len(item_list))
@@ -119,6 +119,9 @@ def main():
         bands = bandcamp.get_wishlist(bandcamp.get_fan_id())
         band = Band(band_id=args.get('band_id', None)[0])
         build_album_list(bands[band])
+    elif mode[0] == 'list_search_albums':
+        band, albums = bandcamp.get_band(args.get('band_id', None)[0])
+        build_album_list(albums)
     elif mode[0] == 'list_albums':
         bands = bandcamp.get_collection(bandcamp.get_fan_id())
         band = Band(band_id=args.get('band_id', None)[0])

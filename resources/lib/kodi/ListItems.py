@@ -93,11 +93,13 @@ class ListItems:
             items.append((url, li, False))
         return items
 
-    def get_band_items(self, bands, from_wishlist=False):
+    def get_band_items(self, bands, from_wishlist=False, from_search=False):
         items = []
         mode = 'list_albums'
         if from_wishlist:
             mode = 'list_wishlist_albums'
+        elif from_search:
+            mode = 'list_search_albums'
         for band in bands:
             li = xbmcgui.ListItem(label=band.band_name)
             url = self._build_url({'mode': mode, 'band_id': band.band_id})
