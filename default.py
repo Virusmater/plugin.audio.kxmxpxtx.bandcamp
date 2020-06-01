@@ -85,7 +85,7 @@ def build_search_result_list(items):
 
 
 def build_featured_list(bands):
-    bands_shuffle = bands.keys()
+    bands_shuffle = list(bands)
     random.shuffle(bands_shuffle)
     for band in bands_shuffle:
         for album in bands[band]:
