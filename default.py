@@ -85,7 +85,9 @@ def build_search_result_list(items):
 
 
 def build_featured_list(bands):
-    for band in bands:
+    bands_shuffle = bands.keys()
+    random.shuffle(bands_shuffle)
+    for band in bands_shuffle:
         for album in bands[band]:
             track_list = list_items.get_track_items(band=band, album=album, tracks=bands[band][album], to_album=True)
             xbmcplugin.addDirectoryItems(addon_handle, track_list, len(track_list))
@@ -146,9 +148,6 @@ def main():
         discover_dict = {}
         for slice in slices:
             discover_dict.update(bandcamp.discover(genre, subgenre, slice))
-        shuffle_list = list(discover_dict.items())
-        random.shuffle(shuffle_list)
-        discover_dict = dict(shuffle_list)
         build_featured_list(discover_dict)
     elif mode[0] == 'search':
         action = args.get("action", None)[0]
