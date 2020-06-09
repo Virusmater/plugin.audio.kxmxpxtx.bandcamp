@@ -84,7 +84,7 @@ class ListItems:
             li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
             li.setProperty('IsPlayable', 'true')
             url = self._build_url({'mode': 'stream', 'url': track.file, 'title': title})
-            li.setProperty("mediaUrl", track.file)
+            li.setPath(track.file)
             if to_album:
                 album_url = self._build_url(
                     {'mode': 'list_songs', 'album_id': album.album_id, 'item_type': album.item_type})
