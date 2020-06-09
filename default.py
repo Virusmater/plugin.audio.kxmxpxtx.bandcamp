@@ -63,10 +63,12 @@ def build_song_list(band, album, tracks, autoplay=False):
     if autoplay:
         ## Few hacks, check for more info: https://forum.kodi.tv/showthread.php?tid=354733&pid=2952379#pid2952379
         playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
-        xbmcplugin.setResolvedUrl(addon_handle, True, listitem=track_list[0][1])
-        xbmc.sleep(2000)
-        for url, list_item, folder in track_list[1:]:
-            playlist.add(url, list_item)
+        play_item = track_list[0][1]
+        play_item.setPath(play_item.getProperty("mediaUrl"))
+        for url, list_item, folder in track_list:
+            playlist.add(url=url, listitem=list_item)
+            xbmcplugin.setResolvedUrl(addon_handle, True, listitem=list_item)
+            xbmc.sleep(500)
     else:
         xbmcplugin.addDirectoryItems(addon_handle, track_list, len(track_list))
         xbmcplugin.setContent(addon_handle, 'songs')
@@ -170,4 +172,5 @@ if __name__ == '__main__':
     username = addon.getSetting('username')
     bandcamp = bandcamp.Bandcamp(username)
     addon_handle = int(sys.argv[1])
+    xbmcplugin.setContent(addon_handle, "songs")
     main()
