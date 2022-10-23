@@ -42,6 +42,38 @@ msgctxt "#30013"
 msgid "Recommended"
 msgstr ""
 
+msgctxt "#30014"
+msgid "General settings for the Bandcamp addon"
+msgstr ""
+
+msgctxt "#30015"
+msgid "Add your username to view your collection and wishlist"
+msgstr ""
+
+msgctxt "#30016"
+msgid "Choose what you will see in the Discover section"
+msgstr ""
+
+msgctxt "#30020"
+msgid "Image Quality"
+msgstr ""
+
+msgctxt "#30021"
+msgid "Set the desired quality level for album art and band images"
+msgstr ""
+
+msgctxt "#30022"
+msgid "High"
+msgstr ""
+
+msgctxt "#30023"
+msgid "Medium"
+msgstr ""
+
+msgctxt "#30024"
+msgid "Low"
+msgstr ""
+
 # GUI main menu
 msgctxt "#30101"
 msgid "Discover"

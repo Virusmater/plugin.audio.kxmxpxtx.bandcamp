@@ -11,6 +11,24 @@ class ListItems:
 
     def __init__(self, addon):
         self.addon = addon
+        quality = self.addon.getSetting('image_quality')
+        self.quality = int(quality) if quality else 1
+
+    def _band_quality(self):
+        if self.quality == 0:
+            return 1 # full resolution
+        if self.quality == 1:
+            return 10 # 1200px wide
+        if self.quality == 2:
+            return 25 # 700px wide
+
+    def _album_quality(self):
+        if self.quality == 0:
+            return 5 # 700px wide
+        if self.quality == 1:
+            return 2 # 350px wide
+        if self.quality == 2:
+            return 9 # 210px wide
 
     def _build_url(self, query):
         base_url = sys.argv[0]
@@ -42,12 +60,14 @@ class ListItems:
         items.append((url, li, True))
         return items
 
-    def get_album_items(self, albums):
+    def get_album_items(self, albums, band=None):
         items = []
         for album in albums:
             li = xbmcgui.ListItem(label=album.album_name)
             url = self._build_url({'mode': 'list_songs', 'album_id': album.album_id, 'item_type': album.item_type})
-            li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
+            band_art = band.get_art_img(quality=self._band_quality()) if band else None
+            album_art = album.get_art_img(quality=self._album_quality())
+            li.setArt({'thumb': album_art, 'fanart': band_art if band_art else album_art})
             items.append((url, li, True))
         return items
 
@@ -81,7 +101,9 @@ class ListItems:
             li.setInfo('music', {'duration': int(track.duration), 'album': album.album_name, 'genre': album.genre,
                                  'mediatype': 'song', 'tracknumber': track.number, 'title': track.track_name,
                                  'artist': band.band_name})
-            li.setArt({'thumb': album.get_art_img(), 'fanart': album.get_art_img()})
+            band_art = band.get_art_img(quality=self._band_quality())
+            album_art = album.get_art_img(quality=self._album_quality())
+            li.setArt({'thumb': album_art, 'fanart': band_art if band_art else album_art})
             li.setProperty('IsPlayable', 'true')
             url = self._build_url({'mode': 'stream', 'url': track.file, 'title': title})
             li.setPath(url)
@@ -103,6 +125,9 @@ class ListItems:
             mode = 'list_search_albums'
         for band in bands:
             li = xbmcgui.ListItem(label=band.band_name)
+            band_art = band.get_art_img(quality=self._band_quality())
+            if band_art:
+                li.setArt({'thumb': band_art, 'fanart': band_art})
             url = self._build_url({'mode': mode, 'band_id': band.band_id})
             items.append((url, li, True))
         return items

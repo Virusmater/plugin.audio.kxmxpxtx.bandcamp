@@ -18,6 +18,5 @@ download zip and add it to Kodi
 # todo
 * add caches collection and fan_id
 * add possibility to listen to all bands and albums in the collection
-* configure cover arts quality
 * add setting for discovery playlist size
 * add personal mix (e.g top punk-hardcore + new black metal)

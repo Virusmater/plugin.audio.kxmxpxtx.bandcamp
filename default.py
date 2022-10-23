@@ -40,8 +40,8 @@ def build_band_list(bands, from_wishlist=False):
     xbmcplugin.endOfDirectory(addon_handle)
 
 
-def build_album_list(albums):
-    albums_list = list_items.get_album_items(albums)
+def build_album_list(albums, band):
+    albums_list = list_items.get_album_items(albums, band)
     xbmcplugin.addDirectoryItems(addon_handle, albums_list, len(albums_list))
     xbmcplugin.endOfDirectory(addon_handle)
 
@@ -117,15 +117,15 @@ def main():
         build_band_list(bandcamp.get_wishlist(bandcamp.get_fan_id()), from_wishlist=True)
     elif mode[0] == 'list_wishlist_albums':
         bands = bandcamp.get_wishlist(bandcamp.get_fan_id())
-        band = Band(band_id=args.get('band_id', None)[0])
-        build_album_list(bands[band])
+        band, albums = bandcamp.get_band(args.get('band_id', None)[0])
+        build_album_list(bands[band], band)
     elif mode[0] == 'list_search_albums':
         band, albums = bandcamp.get_band(args.get('band_id', None)[0])
-        build_album_list(albums)
+        build_album_list(albums, band)
     elif mode[0] == 'list_albums':
         bands = bandcamp.get_collection(bandcamp.get_fan_id())
-        band = Band(band_id=args.get('band_id', None)[0])
-        build_album_list(bands[band])
+        band, albums = bandcamp.get_band(args.get('band_id', None)[0])
+        build_album_list(bands[band], band)
     elif mode[0] == 'list_songs':
         album_id = args.get('album_id', None)[0]
         item_type = args.get('item_type', None)[0]
